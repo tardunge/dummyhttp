@@ -11,6 +11,7 @@ use axum::{
     http::{HeaderValue, Request, StatusCode, Uri},
     middleware::{self, Next},
     response::{IntoResponse, Response},
+    routing::{get},
     Extension, Router,
 };
 
@@ -87,11 +88,12 @@ async fn print_request_response(
     let time = Local::now().format("%Y-%M-%d %H:%M:%S").to_string();
 
     let connect_line = format!(
-        "{time} {peer_info} {method} {uri} {http}/{version}",
+        "{time} {peer_info} {method} {uri} {status} {http}/{version}",
         time = time.yellow(),
         peer_info = peer_info.to_string().bold(),
         method = method.green(),
         uri = uri.cyan().underline(),
+        status = resp.status().as_u16().to_string(),
         http = "HTTP".blue(),
         version = http_version.blue(),
     );
@@ -258,6 +260,7 @@ async fn main() -> Result<()> {
     }
 
     let app = Router::new()
+        .route("/", get(|| async {}))
         .fallback(dummy_response)
         .layer(middleware::from_fn(print_request_response))
         .layer(Extension(args.clone()));
